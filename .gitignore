@@ -1,0 +1,5 @@
+*.swo
+*.pyc
+*.swp
+build
+*.h5
