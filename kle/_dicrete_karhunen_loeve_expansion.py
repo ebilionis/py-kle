@@ -14,6 +14,7 @@ __all__ = ['DiscreteKarhunenLoeveExpansion']
 
 
 import numpy as np
+import scipy.stats
 
 
 class DiscreteKarhunenLoeveExpansion(object):
@@ -111,4 +112,44 @@ class DiscreteKarhunenLoeveExpansion(object):
         """
         Return a string representation of the object.
         """
-        pass
+        s = self.__name__ + '\n'
+        s += 'Input dim: ' + str(self.input_dim) + '\n'
+        s += 'Num. Points: ' + str(self.num_points) + '\n'
+        s += 'Num. Terms: ' + str(self.num_terms)
+        return s
+
+    def __call__(self, xi):
+        """
+        Evaluates the D-KLE at ``xi``.
+
+        :param xi:  The D-KLE coefficients.
+        :type xi:   :class:`numpy.ndarray`
+        """
+        assert xi.ndim <= 2
+        if xi.ndim == 1:
+            assert xi.shape[0] == self.num_terms
+        elif xi.ndim == 2:
+            assert xi.shape[1] == self.num_terms
+        return np.dot(xi * np.sqrt(self.eig_values), self.eig_vectors.T)
+
+    def sample(self, size=1):
+        """
+        Sample random fields.
+        """
+        xi = np.random.normal(0, 1, size=(size, self.num_terms))
+        return self(xi)
+
+    def project(self, X):
+        """
+        Project the vector y to the D-KLE basis.
+
+        :param X:   A vector in the original space.
+        :type X:    :class:`numpy.ndarray`
+        """
+        assert X.ndim <= 2
+        if X.ndim == 1:
+            assert X.shape[0] == self.num_points
+            return np.dot(self.eig_vectors.T, X / np.sqrt(self.eig_values))
+        elif X.ndim == 2:
+            assert X.shape[1] == self.num_points
+            return np.array([self.project(X[i, :]) for x in xrange(X.shape[0])])
